@@ -1,0 +1,95 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Attendance System</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js" type="text/javascript"></script>
+	<style type="text/css">
+		body { font-family: Helvetica, sans-serif; }
+		h2, h3 { margin-top:0; }
+		form { margin-top: 15px; }
+		form > input { margin-right: 15px; }
+		#results { float:right; margin:20px; padding:20px; border:1px solid; background:#ccc; }
+	</style>
+</head>
+<body>
+	<table style="text-align:center">
+	<!-- <div id="results">Your captured image will appear here...</div> -->
+
+	<a href="enroll.html" style="float:right;" >Click here to enroll</a>	
+	<h1>Attendance System</h1>
+	<h3>Take the snapshot to make attendance of the person</h3>
+	
+	<div id="my_camera"></div>
+	
+	<!-- First, include the Webcam.js JavaScript Library -->
+	<script type="text/javascript" src="webcam.min.js"></script>
+	
+	<!-- Configure a few settings and attach camera -->
+	<script language="JavaScript">
+		Webcam.set({
+			width: 320,
+			height: 240,
+			image_format: 'jpeg',
+			jpeg_quality: 90
+		});
+		Webcam.attach( '#my_camera' );
+	</script>
+	
+	<!-- A button for taking snaps -->
+	<form id="myform" method="post" action="">
+    		<input id="mydata" type="hidden" name="mydata" value=""/>
+		<input type="button" value="Take Snapshot" onClick="take_snapshot()">
+		<ul id='paramsList'></ul>
+		<p id="debug"></p>
+	</form>
+	</table>
+	
+	<!-- Code to handle taking the snapshot and displaying it locally -->
+	<script language="JavaScript">
+		function take_snapshot() {
+
+			var raw_image_data;
+			Webcam.snap( function(data_uri) {
+				raw_image_data = data_uri.replace(/^data\:image\/\w+\;base64\,/, '');
+    				//document.getElementById('mydata').value = raw_image_data;
+			} );
+
+
+			//param1Data = $("#mydata").val();
+    			params = "param1=" + encodeURIComponent(raw_image_data);
+			document.getElementById('debug').innerHTML = "Loading.."
+    			$.ajax(
+    			{
+        			type: "POST",
+        			url: "/cgi-bin/recognize.cgi",
+        			data: params,
+        		        dataType: "html",	
+        			success: function(htm)
+        			{
+                                        $("#debug").html("Hello..")
+					var params = $(htm).filter(function(){ return $(this).is('p') });
+                                        //$("#debug").html(htm)
+            				params.each(
+                			function()
+                			{
+                    				var value = "<li>" + $(this).html() + "</li>";
+                    				$("#paramsList").append( value );
+                			}
+            				);
+					
+        			},
+        			error: function(request, ajaxOptions, thrownError)
+        			{
+            				$("#debug").html(request.responseText);
+					$("#debug").html("Error")
+        			}
+
+    			});
+		}
+	</script>
+	
+</body>
+</html>
+
